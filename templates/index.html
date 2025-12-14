@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💾 Document Manager</title>
+    <style>
+        /* Base Styles */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; background-color: #f4f7f6; color: #333; }
+        h2, h3 { color: #004d40; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 1.5rem; }
+        .container { border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #fff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 20px; }
+        
+        /* Form & Flash */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        input[type="text"], input[type="file"], select, textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; } 
+        button { background: #00796b; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; transition: background 0.3s; font-weight: 600; }
+        button:hover { background: #004d40; }
+        
+        .flash-success { padding: 12px; background: #e0f2f1; color: #004d40; border-radius: 4px; margin-bottom: 15px; border-left: 5px solid #00796b; }
+        .flash-danger { padding: 12px; background: #f8e1e1; color: #721c24; border-radius: 4px; margin-bottom: 15px; border-left: 5px solid #c83737; }
+
+        /* Search Bar Layout */
+        .search-form { display: flex; gap: 10px; align-items: center; }
+        .search-form a { background: #607d8b; color: white; padding: 10px 15px; border-radius: 4px; text-decoration: none; flex-shrink: 0; }
+        
+        /* Document Register (Accordion/Cards) */
+        .accordion { width: 100%; margin-top: 20px; }
+        .person-header { 
+            background-color: #e0f2f1; /* Light Teal Background */
+            color: #004d40; /* Dark Teal Text */
+            padding: 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #ccc;
+            border-top: 1px solid #ccc;
+            margin-top: -1px; /* Overlap borders */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .person-header:hover { background-color: #c0e0de; }
+        .person-header .count { 
+            background: #00796b; 
+            color: white; 
+            padding: 4px 8px; 
+            border-radius: 12px; 
+            font-size: 0.9em; 
+        }
+        
+        /* Accordion Content */
+        .document-content {
+            padding: 0 15px;
+            background-color: white;
+            max-height: 0; /* Initially collapsed */
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+            border: 1px solid #eee;
+            border-top: none;
+        }
+        .document-content.active {
+            max-height: 2000px; /* Large enough to show all content */
+            padding: 15px;
+        }
+
+        /* Document Table inside Accordion */
+        .document-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 10px; 
+            font-size: 0.9em; 
+        }
+        .document-table th, .document-table td {
+            border: 1px solid #eee;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .document-table th { background-color: #f7f7f7; font-weight: 600; }
+        .document-table a { color: #00796b; text-decoration: none; }
+        .document-table a:hover { text-decoration: underline; }
+
+    </style>
+</head>
+<body>
+
+    <h2>💾 Document Manager (AI-Powered)</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="container">
+        <h3>Upload New Document</h3>
+        <form method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="person_name">Person's Full Name:</label>
+                <input type="text" name="person_name" id="person_name" placeholder="e.g. Aarav Sharma" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="unique_id">Unique ID (e.g., Employee ID, Date of Birth):</label>
+                <input type="text" name="unique_id" id="unique_id" placeholder="e.g. EMP1001 or 1995-10-25" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">Document Category:</label>
+                <input 
+                    type="text" 
+                    name="category" 
+                    id="category" 
+                    list="categoryOptions" 
+                    placeholder="Select a category or type a new one..." 
+                    required
+                >
+                
+                <datalist id="categoryOptions">
+                    <option value="ID / Passport / Gov't Card">
+                    <option value="Driver's License">
+                    <option value="Proof of Residential Address">
+                    <option value="Official Employment Contract">
+                    <option value="Tax Documentation (W-9, W-4, etc.)">
+                    <option value="Performance Review Record">
+                    <option value="Hiring & Offer Letter">
+                    <option value="Invoices & Financial Records">
+                    <option value="Bank or Investment Statement">
+                    <option value="Legal Agreements / NDAs">
+                    <option value="Certificate of Achievement / Award">
+                    <option value="Miscellaneous Document">
+                </datalist>
+            </div>
+            
+            <div class="form-group">
+                <label for="file">Select Document (PDF/JPG/PNG):</label>
+                <input type="file" name="file" id="file" required>
+            </div>
+            <button type="submit">Upload and Generate Description</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <h3>🔍 Search Documents</h3>
+        <form method="get" action="{{ url_for('index') }}" class="search-form">
+            <input 
+                type="text" 
+                name="search" 
+                placeholder="Search by Name, ID, Category, or Description..." 
+                value="{{ search_term or '' }}" 
+                style="flex-grow: 1;"
+            >
+            <button type="submit" style="background: #007bff; flex-shrink: 0;">Search</button>
+            {% if search_term %}
+                <a href="{{ url_for('index') }}" style="flex-shrink: 0;">Clear Search</a>
+            {% endif %}
+        </form>
+        {% if search_term %}
+            <p style="margin-top: 10px;">Showing results for: <strong>"{{ search_term }}"</strong></p>
+        {% endif %}
+    </div>
+
+    <h3>📋 Document Register</h3>
+    <div class="accordion">
+    {% if all_people %}
+        {% for person in all_people %}
+            
+            {# documents list is already filtered by Python in app.py #}
+            {% set document_list = person.documents %}
+            
+            {# Only display the person header if they have documents (or matching filtered documents) #}
+            {% if document_list %}
+            
+                <div class="person-header" onclick="toggleAccordion(this)">
+                    <div>
+                        {{ person.display_name }} (ID: {{ person.unique_id }})
+                    </div>
+                    <span class="count">{{ document_list | length }} Documents</span>
+                </div>
+                
+                <div class="document-content">
+                    <table class="document-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">ID</th>
+                                <th style="width: 20%;">File Name</th>
+                                <th style="width: 35%;">Description</th> 
+                                <th style="width: 10%;">Category</th>
+                                <th style="width: 10%;">Date</th>
+                                <th style="width: 5%;">View</th>
+                                <th style="width: 10%;">Delete</th> </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in document_list %}
+                            <tr>
+                                <td>{{ doc.id }}</td>
+                                <td>{{ doc.document_name }}</td>
+                                <td>{{ doc.description or 'AI failed to generate description.' }}</td>
+                                <td>{{ doc.category or 'N/A' }}</td>
+                                <td>{{ doc.date_uploaded.strftime('%Y-%m-%d') }}</td>
+                                <td><a href="{{ url_for('view_file', doc_id=doc.id) }}" target="_blank">View</a></td>
+                                
+                                <td>
+                                    <form method="POST" action="{{ url_for('delete_document', doc_id=doc.id) }}" onsubmit="return confirm('Are you sure you want to permanently delete {{ doc.document_name }}?');">
+                                        <button type="submit" style="background: #e53935; padding: 5px 8px; font-size: 0.8em;">Delete</button>
+                                    </form>
+                                </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        {% if search_term %}
+            <p>No documents or people matched your search term: <strong>"{{ search_term }}"</strong>.</p>
+        {% else %}
+            <p>No documents found in the register.</p>
+        {% endif %}
+    {% endif %}
+    </div>
+
+    <script>
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            
+            // Toggle the 'active' class on the content
+            content.classList.toggle('active');
+        }
+    </script>
+
+</body>
+</html>
